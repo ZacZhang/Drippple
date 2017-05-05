@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Drippple</string>
+    <string name="shot_image">Shot image</string>
+    <string name="like">Like</string>
+    <string name="bucket">Bucket</string>
+    <string name="share">Share</string>
+    <string name="shot_author_picture">Shot author picture</string>
 </resources>
