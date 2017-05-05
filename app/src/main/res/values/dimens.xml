@@ -8,4 +8,5 @@
     <dimen name="spacing_large">24dp</dimen>
     <dimen name="shot_author_picture_size">48dp</dimen>
     <dimen name="shot_author_picture_radius">24dp</dimen>
+    <dimen name="toolbar_elevation">4dp</dimen>
 </resources>
