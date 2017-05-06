@@ -7,6 +7,4 @@
     android:adjustViewBounds="true"
     android:scaleType="fitCenter"
     android:src="@drawable/shot_placeholder"
-    android:contentDescription="@string/shot_image">
-
-</ImageView>
+    android:contentDescription="@string/shot_image"/>
