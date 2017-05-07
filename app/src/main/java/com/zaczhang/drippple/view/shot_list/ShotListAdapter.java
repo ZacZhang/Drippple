@@ -25,9 +25,13 @@ public class ShotListAdapter extends RecyclerView.Adapter {
     private static final int VIEW_TYPE_LOADING = 1;
 
     private List<Shot> data;
+    private LoadMoreListener loadMoreListener;
+    private boolean showLoading;
 
-    public ShotListAdapter(@NonNull List<Shot> data) {
+    public ShotListAdapter(@NonNull List<Shot> data, @NonNull LoadMoreListener loadMoreListener) {
         this.data = data;
+        this.loadMoreListener = loadMoreListener;
+        this.showLoading = true;
     }
 
     @Override
@@ -43,7 +47,10 @@ public class ShotListAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
-        if (holder instanceof ShotViewHolder) {
+        final int viewType = getItemViewType(position);
+        if (viewType == VIEW_TYPE_LOADING) {
+            loadMoreListener.onLoadMore();
+        } else {
             final Shot shot = data.get(position);
 
             ShotViewHolder shotViewHolder = (ShotViewHolder) holder;
@@ -68,8 +75,13 @@ public class ShotListAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return data.size() + 1;
-    } // 多一个是loading
+        if (showLoading) {
+            // 多一个是loading
+            return data.size() + 1;
+        } else {
+            return data.size();
+        }
+    }
 
     @Override
     public int getItemViewType(int position) {
@@ -78,5 +90,23 @@ public class ShotListAdapter extends RecyclerView.Adapter {
         } else {
             return VIEW_TYPE_LOADING;
         }
+    }
+
+    public void append(@NonNull List<Shot> moreShots) {
+        data.addAll(moreShots);
+        notifyDataSetChanged();
+    }
+
+    public void setShowLoading(boolean showLoading) {
+        this.showLoading = showLoading;
+        notifyDataSetChanged();
+    }
+
+    public int getDataCount() {
+        return data.size();
+    }
+
+    public interface LoadMoreListener {
+        void onLoadMore();
     }
 }

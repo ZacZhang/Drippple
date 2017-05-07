@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="240dp"
             android:scaleType="centerCrop"
-            android:contentDescription="@string/Shot_image"
+            android:contentDescription="@string/shot_image"
             tools:src="@drawable/shot_placeholder"/>
 
         <RelativeLayout
