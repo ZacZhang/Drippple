@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
+import com.zaczhang.drippple.view.bucket_list.BucketListFragment;
 import com.zaczhang.drippple.view.shot_list.ShotListFragment;
 
 import butterknife.BindView;
@@ -96,10 +97,10 @@ public class MainActivity extends AppCompatActivity {
                         fragment = ShotListFragment.newInstance();
                         setTitle(R.string.title_likes);
                         break;
-//                    case R.id.drawer_item_buckets:
-//                        fragment = BucketListFragment.newInstance();
-//                        setTitle(R.string.title_buckets);
-//                        break;
+                    case R.id.drawer_item_buckets:
+                        fragment = BucketListFragment.newInstance();
+                        setTitle(R.string.title_buckets);
+                        break;
                 }
 
                 drawerLayout.closeDrawers();
