@@ -1,5 +1,6 @@
 package com.zaczhang.drippple;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,7 +12,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
+import com.zaczhang.drippple.dribbble.Dribbble;
 import com.zaczhang.drippple.view.bucket_list.BucketListFragment;
 import com.zaczhang.drippple.view.shot_list.ShotListFragment;
 
@@ -76,6 +80,21 @@ public class MainActivity extends AppCompatActivity {
         );
 
         drawerLayout.setDrawerListener(drawerToggle);
+
+        View headerView = navigationView.getHeaderView(0);
+
+        ((TextView) headerView.findViewById(R.id.nav_header_user_name)).setText(Dribbble.getCurrentUser().name);
+
+        headerView.findViewById(R.id.nav_header_logout).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Dribbble.logout(MainActivity.this);
+
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
