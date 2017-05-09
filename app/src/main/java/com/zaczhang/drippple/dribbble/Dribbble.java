@@ -8,10 +8,13 @@ import android.util.Log;
 
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.zaczhang.drippple.model.Bucket;
+import com.zaczhang.drippple.model.Shot;
 import com.zaczhang.drippple.model.User;
 import com.zaczhang.drippple.utils.ModelUtils;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -21,9 +24,14 @@ public class Dribbble {
 
     private static final String TAG = "Dribbble API";
 
+    // Dribbble loads everything in a 12-per-page manner
+    public static final int COUNT_PER_PAGE = 12;
+
     private static final String API_URL = "https://api.dribbble.com/v1/";
 
     private static final String USER_END_POINT = API_URL + "user";
+
+    private static final String SHOT_END_POINT = API_URL + "shots";
 
     private static final String SP_AUTH = "auth";
 
@@ -33,11 +41,16 @@ public class Dribbble {
 
     private static final TypeToken<User> USER_TYPE = new TypeToken<User>(){};
 
+    private static final TypeToken<List<Shot>> SHOT_LIST_TYPE = new TypeToken<List<Shot>>(){};
+
+    private static final TypeToken<List<Bucket>> BUCKET_LIST_TYPE = new TypeToken<List<Bucket>>(){};
+
     private static OkHttpClient client = new OkHttpClient();
 
     private static String accessToken;
 
     private static User user;
+
 
     private static Request.Builder authRequestBuilder(String url) {
         return new Request.Builder()
@@ -93,12 +106,22 @@ public class Dribbble {
         user = null;
     }
 
+
+
+    public static User getCurrentUser() {
+        return user;
+    }
+
     public static User getUser() throws IOException, JsonSyntaxException {
         return parseResponse(makeGetRequest(USER_END_POINT), USER_TYPE);
     }
 
-    public static User getCurrentUser() {
-        return user;
+    public static void storeUser(@NonNull Context context, @NonNull User user) {
+        ModelUtils.save(context, KEY_USER, user);
+    }
+
+    public static User loadUser(@NonNull Context context) {
+        return ModelUtils.read(context, KEY_USER, new TypeToken<User>(){});
     }
 
     public static void storeAccessToken(@NonNull Context context, @NonNull String token) {
@@ -111,11 +134,13 @@ public class Dribbble {
         return sp.getString(KEY_ACCESS_TOKEN, null);
     }
 
-    public static void storeUser(@NonNull Context context, @NonNull User user) {
-        ModelUtils.save(context, KEY_USER, user);
+    public static List<Shot> getShots(int page) throws IOException, JsonSyntaxException {
+        String url = SHOT_END_POINT + "?page=" + page;
+        return parseResponse(makeGetRequest(url), SHOT_LIST_TYPE);
     }
 
-    public static User loadUser(@NonNull Context context) {
-        return ModelUtils.read(context, KEY_USER, new TypeToken<User>(){});
+    public static List<Bucket> getUserBuckets(int page) throws IOException, JsonSyntaxException{
+        String url = USER_END_POINT + "/" + "buckets?page=" + page;
+        return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
     }
 }
