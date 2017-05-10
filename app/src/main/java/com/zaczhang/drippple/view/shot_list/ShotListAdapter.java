@@ -2,12 +2,15 @@ package com.zaczhang.drippple.view.shot_list;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.interfaces.DraweeController;
 import com.google.gson.reflect.TypeToken;
 import com.zaczhang.drippple.R;
 import com.zaczhang.drippple.model.Shot;
@@ -15,6 +18,7 @@ import com.zaczhang.drippple.utils.ModelUtils;
 import com.zaczhang.drippple.view.shot_detail.ShotActivity;
 import com.zaczhang.drippple.view.shot_detail.ShotFragment;
 
+import java.net.URI;
 import java.util.List;
 
 
@@ -58,14 +62,20 @@ public class ShotListAdapter extends RecyclerView.Adapter {
             shotViewHolder.likeCount.setText(String.valueOf(shot.likes_count));
             shotViewHolder.bucketCount.setText(String.valueOf(shot.buckets_count));
             shotViewHolder.viewCount.setText(String.valueOf(shot.views_count));
-            shotViewHolder.image.setImageResource(R.drawable.shot_placeholder);
+
+            // play gif automatically
+            DraweeController controller = Fresco.newDraweeControllerBuilder()
+                    .setUri(Uri.parse(shot.getImageUrl()))
+                    .setAutoPlayAnimations(true)
+                    .build();
+            shotViewHolder.image.setController(controller);
 
             shotViewHolder.cover.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     Context context = holder.itemView.getContext();
                     Intent intent = new Intent(context, ShotActivity.class);
-                    intent.putExtra(ShotFragment.KEY_SHOT, ModelUtils.toString(shot, new TypeToken<Shot>(){}));
+                    intent.putExtra(ShotFragment.KEY_SHOT, ModelUtils.toString(shot, new TypeToken<Shot>() {}));
                     intent.putExtra(ShotActivity.KEY_SHOT_TITLE, shot.title);
                     context.startActivity(intent);
                 }
