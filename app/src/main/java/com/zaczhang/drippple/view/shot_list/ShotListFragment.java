@@ -69,36 +69,6 @@ public class ShotListFragment extends Fragment {
         });
 
         recyclerView.setAdapter(adapter);
-
-//        final Handler handler = new Handler();
-//        adapter = new ShotListAdapter(fakeData(0), new ShotListAdapter.LoadMoreListener() {
-//            @Override
-//            public void onLoadMore() {
-//                new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            Thread.sleep(2000);
-//                            handler.post(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    List<Shot> moreData = fakeData(adapter.getDataCount() / COUNT_PER_PAGE);
-//                                    adapter.append(moreData);
-//                                    // adapter.setShowLoading(moreData.size() >= COUNT_PER_PAGE);
-//                                    if (moreData.size() < COUNT_PER_PAGE) {
-//                                        adapter.setShowLoading(false);
-//                                    }
-//                                }
-//                            });
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }).start();
-//            }
-//        });
-
-
     }
 
     private List<Shot> fakeData(int page) {
@@ -135,6 +105,7 @@ public class ShotListFragment extends Fragment {
     private static String makeDescription() {
         return TextUtils.join(" ", words);
     }
+
 
     private class LoadShotTask extends AsyncTask<Void, Void, List<Shot>> {
 
