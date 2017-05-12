@@ -14,6 +14,7 @@ import com.zaczhang.drippple.model.User;
 import com.zaczhang.drippple.utils.ModelUtils;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.List;
 
 import okhttp3.FormBody;
@@ -37,10 +38,10 @@ public class Dribbble {
     private static final String SP_AUTH = "auth";
 
     private static final String KEY_ACCESS_TOKEN = "access_token";
-
     private static final String KEY_USER = "user";
     private static final String KEY_NAME = "name";
     private static final String KEY_DESCRIPTION = "description";
+    private static final String KEY_SHOT_ID = "shot_id";
 
     private static final TypeToken<User> USER_TYPE = new TypeToken<User>() {};
     private static final TypeToken<Bucket> BUCKET_TYPE = new TypeToken<Bucket>() {};
@@ -76,12 +77,34 @@ public class Dribbble {
         return makeRequest(request);
     }
 
+    private static Response makePutRequest(String url, RequestBody requestBody) throws IOException {
+        Request request = authRequestBuilder(url)
+                .put(requestBody)
+                .build();
+        return makeRequest(request);
+    }
+
+    private static Response makeDeleteRequest(String url, RequestBody requestBody) throws IOException {
+        Request request = authRequestBuilder(url)
+                .delete(requestBody)
+                .build();
+        return makeRequest(request);
+    }
+
     private static <T> T parseResponse(Response response, TypeToken<T> typeToken)
             throws IOException, JsonSyntaxException {
         String responseString = response.body().string();
         Log.d(TAG, responseString);
         return ModelUtils.toObject(responseString, typeToken);
     }
+
+    private static void checkStatusCode(Response response, int statusCode) throws IOException {
+        if (response.code() != statusCode) {
+            throw new IOException(response.message());
+        }
+    }
+
+    // end of basic http methods
 
     // 读取之前已经保存的accessToken,能读出来则说明已经登录过了，否则读取新用户
     public static void init(@NonNull Context context) {
@@ -146,8 +169,29 @@ public class Dribbble {
         return parseResponse(makeGetRequest(url), SHOT_LIST_TYPE);
     }
 
-    public static List<Bucket> getUserBuckets(int page) throws IOException, JsonSyntaxException{
+    /**
+     * @return all the buckets for the logged in user
+     * @throws IOException
+     * @throws JsonSyntaxException
+     */
+    public static List<Bucket> getUserBuckets() throws IOException, JsonSyntaxException {
+        String url = USER_END_POINT + "/" + "buckets?per_page=" + Integer.MAX_VALUE;
+        return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
+    }
+
+    public static List<Bucket> getUserBuckets(int page) throws IOException, JsonSyntaxException {
         String url = USER_END_POINT + "/" + "buckets?page=" + page;
+        return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
+    }
+
+    /**
+     * @param shotID
+     * @return all the buckets which a certain shot has been put into
+     * @throws IOException
+     * @throws JsonSyntaxException
+     */
+    public static List<Bucket> getShotBuckets(@NonNull String shotID) throws IOException, JsonSyntaxException {
+        String url = SHOT_END_POINT + "/" + shotID + "/buckets?per_page=" + Integer.MAX_VALUE;
         return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
     }
 
@@ -159,5 +203,35 @@ public class Dribbble {
                 .build();
 
         return parseResponse(makePostRequest(BUCKETS_END_POINT, formBody), BUCKET_TYPE);
+    }
+
+
+    /**
+     * Add a shot to a bucket
+     * @param bucketID
+     * @param shotID
+     * @throws IOException
+     * @throws JsonSyntaxException
+     */
+    public static void addBucketShot(@NonNull String bucketID,
+                                     @NonNull String shotID) throws IOException, JsonSyntaxException {
+        String url = BUCKETS_END_POINT + "/" + bucketID + "/shots";
+        FormBody formBody = new FormBody.Builder()
+                .add(KEY_SHOT_ID, shotID)
+                .build();
+
+        Response response = makePutRequest(url, formBody);
+        checkStatusCode(response, HttpURLConnection.HTTP_NO_CONTENT);
+    }
+
+    public static void removeBucketShot(@NonNull String bucketID,
+                                        @NonNull String shotID) throws IOException, JsonSyntaxException {
+        String url = BUCKETS_END_POINT + "/" + bucketID + "/shots";
+        FormBody formBody = new FormBody.Builder()
+                .add(KEY_SHOT_ID, shotID)
+                .build();
+
+        Response response = makeDeleteRequest(url, formBody);
+        checkStatusCode(response, HttpURLConnection.HTTP_NO_CONTENT);
     }
 }
