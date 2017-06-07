@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Switch;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.interfaces.DraweeController;
@@ -29,6 +30,7 @@ public class ShotAdapter extends RecyclerView.Adapter {
 
     private static final int VIEW_TYPE_SHOT_IMAGE = 0;
     private static final int VIEW_TYPE_SHOT_INFO = 1;
+    private static final int VIEW_TYPE_SHOT_COMMENT = 2;
 
     private final ShotFragment shotFragment;
     private final Shot shot;
@@ -52,6 +54,10 @@ public class ShotAdapter extends RecyclerView.Adapter {
             case VIEW_TYPE_SHOT_INFO:
                 view = LayoutInflater.from(parent.getContext()).inflate(R.layout.shot_item_info, parent, false);
                 return new InfoViewHolder(view);
+
+            case VIEW_TYPE_SHOT_COMMENT:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.shot_item_comment, parent, false);
+                return new CommentViewHolder(view);
 
             default:
                 return null;
@@ -109,22 +115,40 @@ public class ShotAdapter extends RecyclerView.Adapter {
                     }
                 });
                 break;
+
+            case VIEW_TYPE_SHOT_COMMENT:
+                CommentViewHolder commentViewHolder = (CommentViewHolder) holder;
+
+                commentViewHolder.comment.setText(shot.comment);
+                break;
         }
     }
 
     @Override
     public int getItemCount() {
-        // two viewTypes
-        return 2;
+        // three viewTypes
+        return 3;
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0) {
-            return VIEW_TYPE_SHOT_IMAGE;
-        } else {
-            return VIEW_TYPE_SHOT_INFO;
+        // mapping from position to ViewType
+        switch (position) {
+            case 0:
+                return VIEW_TYPE_SHOT_IMAGE;
+            case 1:
+                return VIEW_TYPE_SHOT_INFO;
+            case 2:
+                return VIEW_TYPE_SHOT_COMMENT;
+            default:
+                return -1;
         }
+
+//        if (position == 0) {
+//            return VIEW_TYPE_SHOT_IMAGE;
+//        } else {
+//            return VIEW_TYPE_SHOT_INFO;
+//        }
     }
 
     public List<String> getReadOnlyCollectedBucketIDs() {

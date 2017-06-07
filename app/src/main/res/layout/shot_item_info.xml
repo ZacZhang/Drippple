@@ -114,6 +114,7 @@
             android:layout_height="wrap_content"
             android:layout_alignTop="@+id/shot_author_picture"
             android:layout_toRightOf="@+id/shot_author_picture"
+            android:layout_toEndOf="@id/shot_author_picture"
             style="@style/AppTheme.TextView.2"
             tools:text="Shot title"/>
 
@@ -122,6 +123,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/shot_title"
+            android:layout_alignStart="@id/shot_title"
             android:layout_below="@+id/shot_title"
             tools:text="Shot author"/>
 

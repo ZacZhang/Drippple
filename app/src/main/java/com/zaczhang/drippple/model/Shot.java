@@ -15,6 +15,9 @@ public class Shot {
     public String description;
     public String html_url;
 
+    // +++++++++++
+    public String comment;
+
     public int width;
     public int height;
     public Map<String, String> images;
