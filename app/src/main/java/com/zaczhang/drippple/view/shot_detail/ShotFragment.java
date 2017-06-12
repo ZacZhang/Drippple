@@ -44,6 +44,8 @@ public class ShotFragment extends Fragment {
     private ShotAdapter adapter;
     private Shot shot;
 
+    // 接收传进来的整个bundle，设置成setArguments, 然后return这个fragment
+    // 通过这种方式完成ShotActivity到ShotFragment的数据传递
     public static ShotFragment newInstance(@NonNull Bundle args) {
         ShotFragment fragment = new ShotFragment();
         fragment.setArguments(args);
@@ -64,6 +66,7 @@ public class ShotFragment extends Fragment {
     public void onViewCreated(final View view, @Nullable Bundle savedInstanceState) {
 
         // json解序列化
+        // getArguments()得到传进来的bundle，然后取出key为shot的json字符串，解序列化为shot对象
         shot = ModelUtils.toObject(getArguments().getString(KEY_SHOT), new TypeToken<Shot>(){});
 
         adapter = new ShotAdapter(this, shot);

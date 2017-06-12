@@ -35,6 +35,7 @@ public abstract class SingleFragmentActivity extends AppCompatActivity {
 
         setTitle(getActivityTitle());
 
+        // 把fragment添加到activity里
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()

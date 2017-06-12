@@ -3,6 +3,7 @@ package com.zaczhang.drippple.model;
 import android.support.annotation.Nullable;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 public class Shot {
@@ -16,7 +17,7 @@ public class Shot {
     public String html_url;
 
     // +++++++++++
-    public String comment;
+    public List<String> comment;
 
     public int width;
     public int height;

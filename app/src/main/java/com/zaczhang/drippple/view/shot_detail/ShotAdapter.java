@@ -119,7 +119,8 @@ public class ShotAdapter extends RecyclerView.Adapter {
             case VIEW_TYPE_SHOT_COMMENT:
                 CommentViewHolder commentViewHolder = (CommentViewHolder) holder;
 
-                commentViewHolder.comment.setText(shot.comment);
+                // commentViewHolder.comment.setText(shot.comment.get(0));
+                commentViewHolder.comment.setText("come on");
                 break;
         }
     }
@@ -127,6 +128,7 @@ public class ShotAdapter extends RecyclerView.Adapter {
     @Override
     public int getItemCount() {
         // three viewTypes
+        // return shot.comment.size() + 2;
         return 3;
     }
 
@@ -138,10 +140,10 @@ public class ShotAdapter extends RecyclerView.Adapter {
                 return VIEW_TYPE_SHOT_IMAGE;
             case 1:
                 return VIEW_TYPE_SHOT_INFO;
-            case 2:
-                return VIEW_TYPE_SHOT_COMMENT;
+//            case 2:
+//                return VIEW_TYPE_SHOT_COMMENT;
             default:
-                return -1;
+                return VIEW_TYPE_SHOT_COMMENT;
         }
 
 //        if (position == 0) {

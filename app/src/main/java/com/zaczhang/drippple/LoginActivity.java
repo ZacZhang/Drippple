@@ -25,10 +25,12 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 显示login界面
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
 
         // load access token from shared preference
+        // 尝试读取access token，有access token就是isLoggedIn
         Dribbble.init(this);
 
         if (!Dribbble.isLoggedIn()) {

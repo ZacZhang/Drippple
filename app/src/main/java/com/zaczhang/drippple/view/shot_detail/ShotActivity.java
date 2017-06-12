@@ -13,6 +13,7 @@ public class ShotActivity extends SingleFragmentActivity {
     @NonNull
     @Override
     protected Fragment newFragment() {
+        // 把Intent里面的所有数据取出来，也就是一个bundle，然后传给ShotFragment
         return ShotFragment.newInstance(getIntent().getExtras());
     }
 

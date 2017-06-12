@@ -32,6 +32,7 @@ public class ShotListAdapter extends RecyclerView.Adapter {
     private LoadMoreListener loadMoreListener;
     private boolean showLoading;
 
+    // adapter接收一个callback，当需要加载更多数据的时候，调用这个callback。adapter只负责把数据显示到界面上。
     public ShotListAdapter(@NonNull List<Shot> data, @NonNull LoadMoreListener loadMoreListener) {
         this.data = data;
         this.loadMoreListener = loadMoreListener;
@@ -52,6 +53,7 @@ public class ShotListAdapter extends RecyclerView.Adapter {
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
         final int viewType = getItemViewType(position);
+
         if (viewType == VIEW_TYPE_LOADING) {
             loadMoreListener.onLoadMore();
         } else {
@@ -70,12 +72,15 @@ public class ShotListAdapter extends RecyclerView.Adapter {
                     .build();
             shotViewHolder.image.setController(controller);
 
+            // launch ShotActivity and pass the Shot data to it
             shotViewHolder.cover.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     Context context = holder.itemView.getContext();
                     Intent intent = new Intent(context, ShotActivity.class);
                     intent.putExtra(ShotFragment.KEY_SHOT, ModelUtils.toString(shot, new TypeToken<Shot>() {}));
+                    // 单独传一个title是因为ShotActivity接收到Shot数据，原封不动的传给ShotFragment。
+                    // 为了ShotActivity取到标题时，不需要解序列化，这里单独再传一个title
                     intent.putExtra(ShotActivity.KEY_SHOT_TITLE, shot.title);
                     context.startActivity(intent);
                 }
@@ -103,7 +108,9 @@ public class ShotListAdapter extends RecyclerView.Adapter {
     }
 
     public void append(@NonNull List<Shot> moreShots) {
+        // 更新数据
         data.addAll(moreShots);
+        // 更新界面
         notifyDataSetChanged();
     }
 
