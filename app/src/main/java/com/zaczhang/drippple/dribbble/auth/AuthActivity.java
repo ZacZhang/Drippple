@@ -18,8 +18,6 @@ import android.widget.ProgressBar;
 
 import com.zaczhang.drippple.R;
 
-import java.net.URI;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -41,18 +39,25 @@ public class AuthActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
         setTitle(getString(R.string.auth_activity_title));
 
         progressBar.setMax(100);
 
         webView.setWebViewClient(new WebViewClient() {
 
+
             // 当werView要加载新的url时，这个函数就会被调用
+            // 捕捉到这个跳转的事件
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
 
                 // 当整个url以redirect_uri开头时，获取后部分的临时令牌(code)
+                String url = request.getUrl().toString();
                 if (url.startsWith(Auth.REDIRECT_URI)) {
                     Uri uri = Uri.parse(url);
                     Intent intent = new Intent();
@@ -61,8 +66,24 @@ public class AuthActivity extends AppCompatActivity {
                     finish();
                 }
 
-                return super.shouldOverrideUrlLoading(view, url);
+                return super.shouldOverrideUrlLoading(view, request);
             }
+
+
+//            @Override
+//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+//
+//                // 当整个url以redirect_uri开头时，获取后部分的临时令牌(code)
+//                if (url.startsWith(Auth.REDIRECT_URI)) {
+//                    Uri uri = Uri.parse(url);
+//                    Intent intent = new Intent();
+//                    intent.putExtra(KEY_CODE, uri.getQueryParameter(KEY_CODE));
+//                    setResult(RESULT_OK, intent);
+//                    finish();
+//                }
+//
+//                return super.shouldOverrideUrlLoading(view, url);
+//            }
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {

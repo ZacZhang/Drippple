@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -43,8 +44,11 @@ import butterknife.ButterKnife;
 public class BucketListFragment extends Fragment {
 
     public static final int REQ_CODE_NEW_BUCKET = 100;
+
+    public static final String KEY_USER_ID = "user_id";
     public static final String KEY_CHOOSING_MODE = "choose_mode";
     public static final String KEY_CHOSEN_BUCKET_IDS = "chosen_bucket_ids";
+    public static final String KEY_COLLECTED_BUCKET_IDS = "collected_bucket_ids";
 
     @BindView(R.id.recycler_view) RecyclerView recyclerView;
     @BindView(R.id.fab) FloatingActionButton fab;
@@ -53,9 +57,11 @@ public class BucketListFragment extends Fragment {
     private boolean isChoosingMode;
     private List<String> chosenBucketIDs;
 
-    public static BucketListFragment newInstance(boolean isChoosingMode,
+    public static BucketListFragment newInstance(@NonNull String userID,
+                                                 boolean isChoosingMode,
                                                  @Nullable ArrayList<String> chosenBucketIDs) {
         Bundle args = new Bundle();
+        args.putString(KEY_USER_ID, userID);
         args.putBoolean(KEY_CHOOSING_MODE, isChoosingMode);
         args.putStringArrayList(KEY_CHOSEN_BUCKET_IDS, chosenBucketIDs);
 

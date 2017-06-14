@@ -2,32 +2,25 @@ package com.zaczhang.drippple.view.shot_list;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.os.AsyncTaskCompat;
-import android.support.v4.widget.Space;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.google.gson.JsonSyntaxException;
 import com.zaczhang.drippple.R;
 import com.zaczhang.drippple.dribbble.Dribbble;
 import com.zaczhang.drippple.model.Shot;
-import com.zaczhang.drippple.model.User;
 import com.zaczhang.drippple.view.base.SpaceItemDecoration;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,8 +28,6 @@ import butterknife.ButterKnife;
 
 public class ShotListFragment extends Fragment {
     @BindView(R.id.recycler_view) RecyclerView recyclerView;
-
-    // private static final int COUNT_PER_PAGE = 20;
 
     private ShotListAdapter adapter;
 
@@ -72,6 +63,7 @@ public class ShotListFragment extends Fragment {
     }
 
 
+    // 加载shot
     private class LoadShotTask extends AsyncTask<Void, Void, List<Shot>> {
 
         int page;

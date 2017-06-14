@@ -7,16 +7,20 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.zaczhang.drippple.R;
 import com.zaczhang.drippple.model.Shot;
+import com.zaczhang.drippple.utils.ImageUtils;
 import com.zaczhang.drippple.view.bucket_list.BucketListFragment;
 import com.zaczhang.drippple.view.bucket_list.ChooseBucketActivity;
 
@@ -35,12 +39,10 @@ public class ShotAdapter extends RecyclerView.Adapter {
     private final ShotFragment shotFragment;
     private final Shot shot;
 
-    private ArrayList<String> collectedBucketIDs;
 
     public ShotAdapter(@NonNull ShotFragment shotFragment, @NonNull Shot shot) {
         this.shotFragment = shotFragment;
         this.shot = shot;
-        this.collectedBucketIDs = null;
     }
 
     @Override
@@ -71,24 +73,83 @@ public class ShotAdapter extends RecyclerView.Adapter {
         switch (viewType) {
             case VIEW_TYPE_SHOT_IMAGE:
                 // play gif automatically
-                DraweeController controller = Fresco.newDraweeControllerBuilder()
-                        .setUri(Uri.parse(shot.getImageUrl()))
-                        .setAutoPlayAnimations(true)
-                        .build();
-
-                ((ImageViewHolder) holder).image.setController(controller);
+                ImageUtils.loadShotImage(shot, ((ImageViewHolder) holder).image);
                 break;
 
             case VIEW_TYPE_SHOT_INFO:
-                InfoViewHolder infoViewHolder = (InfoViewHolder) holder;
+                final InfoViewHolder infoViewHolder = (InfoViewHolder) holder;
 
                 infoViewHolder.title.setText(shot.title);
                 infoViewHolder.authorName.setText(shot.user.name);
-                infoViewHolder.description.setText(shot.description);
-                infoViewHolder.authorPicture.setImageURI(Uri.parse(shot.user.avatar_url));
+
+                if (shot.description != null) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        infoViewHolder.description.setText(Html.fromHtml(shot.description, Html.FROM_HTML_MODE_LEGACY));
+                    } else {
+                        infoViewHolder.description.setText(Html.fromHtml(shot.description));
+                    }
+                } else {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        infoViewHolder.description.setText(Html.fromHtml("", Html.FROM_HTML_MODE_LEGACY));
+                    } else {
+                        infoViewHolder.description.setText(Html.fromHtml(""));
+                    }
+                }
+
+                // 设置文本可滚动
+                infoViewHolder.description.setMovementMethod(LinkMovementMethod.getInstance());
+
+                // infoViewHolder.authorPicture.setImageURI(Uri.parse(shot.user.avatar_url));
                 infoViewHolder.likeCount.setText(String.valueOf(shot.likes_count));
                 infoViewHolder.bucketCount.setText(String.valueOf(shot.buckets_count));
                 infoViewHolder.viewCount.setText(String.valueOf(shot.views_count));
+
+                ImageUtils.loadUserPicture(getContext(), infoViewHolder.authorPicture, shot.user.avatar_url);
+
+                infoViewHolder.likeCount.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Toast.makeText(getContext(), "Like count clicked", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                infoViewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        shotFragment.like(shot.id, !shot.liked);
+                    }
+                });
+
+                infoViewHolder.bucketCount.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Toast.makeText(getContext(), "Bucket count clicked", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                // 启动新的activity（选择要添加的bucket）
+                infoViewHolder.bucketButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        shotFragment.bucket();
+                    }
+                });
+
+                // 分享
+                infoViewHolder.shareButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        shotFragment.share();
+                    }
+                });
+
+                Drawable likeDrawable;
+                if (shot.liked) {
+                    likeDrawable = ContextCompat.getDrawable(getContext(), R.drawable.ic_favorite_pink_18dp);
+                } else {
+                    likeDrawable = ContextCompat.getDrawable(getContext(), R.drawable.ic_favorite_black_18dp);
+                }
+                infoViewHolder.likeButton.setImageDrawable(likeDrawable);
 
                 Drawable bucketDrawable;
                 if (shot.bucketed) {
@@ -100,20 +161,6 @@ public class ShotAdapter extends RecyclerView.Adapter {
                 }
                 infoViewHolder.bucketButton.setImageDrawable(bucketDrawable);
 
-                infoViewHolder.shareButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        share(view.getContext());
-                    }
-                });
-
-                infoViewHolder.bucketButton.setOnClickListener(new View.OnClickListener(){
-                    @Override
-                    public void onClick(View view) {
-                        // 启动新的activity（选择要添加的bucket）
-                        bucket(view.getContext());
-                    }
-                });
                 break;
 
             case VIEW_TYPE_SHOT_COMMENT:
@@ -153,51 +200,8 @@ public class ShotAdapter extends RecyclerView.Adapter {
 //        }
     }
 
-    public List<String> getReadOnlyCollectedBucketIDs() {
-        // 获取刚进去时的bucket id
-        return Collections.unmodifiableList(collectedBucketIDs);
-    }
-
-    public void updateCollectedBucketIDs(@NonNull List<String> bucketIDs) {
-        if (collectedBucketIDs == null) {
-            collectedBucketIDs = new ArrayList<>();
-        }
-
-        collectedBucketIDs.clear();
-        collectedBucketIDs.addAll(bucketIDs);
-
-        shot.bucketed = !bucketIDs.isEmpty();
-        notifyDataSetChanged();
-    }
-
-    public void updateCollectedBucketIDs(@NonNull List<String> addedIDs,
-                                         @NonNull List<String> removedIDs) {
-        if (collectedBucketIDs == null) {
-            collectedBucketIDs = new ArrayList<>();
-        }
-
-        collectedBucketIDs.addAll(addedIDs);
-        collectedBucketIDs.removeAll(removedIDs);
-
-        shot.bucketed = !collectedBucketIDs.isEmpty();
-        shot.buckets_count = shot.buckets_count + addedIDs.size() - removedIDs.size();
-        notifyDataSetChanged();
-    }
-
-    private void share(Context context) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_SEND);
-        intent.putExtra(Intent.EXTRA_TEXT, shot.title + " " + shot.html_url);
-        intent.setType("text/plain");
-        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_shot)));
-    }
-
-    private void bucket(Context context) {
-        if (collectedBucketIDs != null) {
-            // collectedBucketIDs == null means we're still loading
-            Intent intent = new Intent(context, ChooseBucketActivity.class);
-            intent.putStringArrayListExtra(BucketListFragment.KEY_CHOSEN_BUCKET_IDS, collectedBucketIDs);
-            shotFragment.startActivityForResult(intent, ShotFragment.REQ_CODE_BUCKET);
-        }
+    @NonNull
+    private Context getContext() {
+        return shotFragment.getContext();
     }
 }

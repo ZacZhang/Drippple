@@ -62,6 +62,7 @@ public class LoginActivity extends AppCompatActivity {
                     try {
                         // this is a network call and it's time consuming
                         // that's why we are doing this in a non-UI thread
+                        // 临时换最终
                         String token = Auth.fetchAccessToken(authCode);
 
                         // store access token in SharedPreferences
