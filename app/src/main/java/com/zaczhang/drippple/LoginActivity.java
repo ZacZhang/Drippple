@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.google.gson.JsonSyntaxException;
 import com.zaczhang.drippple.dribbble.Dribbble;
+import com.zaczhang.drippple.dribbble.DribbbleException;
 import com.zaczhang.drippple.dribbble.auth.Auth;
 import com.zaczhang.drippple.dribbble.auth.AuthActivity;
 
@@ -71,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);
                         finish();
-                    } catch (IOException |JsonSyntaxException e) {
+                    } catch (IOException | DribbbleException e) {
                         e.printStackTrace();
                     }
                 }

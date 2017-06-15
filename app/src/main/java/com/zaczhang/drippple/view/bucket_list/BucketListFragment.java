@@ -12,6 +12,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.os.AsyncTaskCompat;
+import android.support.v4.os.TraceCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -22,10 +24,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.facebook.imagepipeline.producers.AddImageTransformMetaDataProducer;
 import com.google.gson.JsonSyntaxException;
 import com.zaczhang.drippple.R;
 import com.zaczhang.drippple.dribbble.Dribbble;
+import com.zaczhang.drippple.dribbble.DribbbleException;
 import com.zaczhang.drippple.model.Bucket;
+import com.zaczhang.drippple.view.base.DribbbleTask;
+import com.zaczhang.drippple.view.base.InfiniteAdapter;
 import com.zaczhang.drippple.view.base.SpaceItemDecoration;
 
 import java.io.IOException;
@@ -33,9 +39,11 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -51,11 +59,21 @@ public class BucketListFragment extends Fragment {
     public static final String KEY_COLLECTED_BUCKET_IDS = "collected_bucket_ids";
 
     @BindView(R.id.recycler_view) RecyclerView recyclerView;
+    @BindView(R.id.swipe_refresh_container) SwipeRefreshLayout swipeRefreshLayout;
     @BindView(R.id.fab) FloatingActionButton fab;
 
     private BucketListAdapter adapter;
+
+    private String userID;
     private boolean isChoosingMode;
-    private List<String> chosenBucketIDs;
+    private Set<String> collectedBucketIDSet;
+
+    private InfiniteAdapter.LoadMoreListener onLoadMore = new InfiniteAdapter.LoadMoreListener() {
+        @Override
+        public void onLoadMore() {
+            AsyncTaskCompat.executeParallel(new LoadBucketsTask(false));
+        }
+    };
 
     public static BucketListFragment newInstance(@NonNull String userID,
                                                  boolean isChoosingMode,
@@ -63,7 +81,7 @@ public class BucketListFragment extends Fragment {
         Bundle args = new Bundle();
         args.putString(KEY_USER_ID, userID);
         args.putBoolean(KEY_CHOOSING_MODE, isChoosingMode);
-        args.putStringArrayList(KEY_CHOSEN_BUCKET_IDS, chosenBucketIDs);
+        args.putStringArrayList(KEY_COLLECTED_BUCKET_IDS, chosenBucketIDs);
 
         BucketListFragment fragment = new BucketListFragment();
         fragment.setArguments(args);
@@ -79,8 +97,10 @@ public class BucketListFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_fab_recycler_view, container, false);
+    public View onCreateView(LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_swipe_fab_recycler_view, container, false);
         ButterKnife.bind(this, view);
         return view;
     }
@@ -89,26 +109,34 @@ public class BucketListFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
-        isChoosingMode = getArguments().getBoolean(KEY_CHOOSING_MODE);
+        // get arguments
+        final Bundle args = getArguments();
+        userID = args.getString(KEY_USER_ID);
+        isChoosingMode = args.getBoolean(KEY_CHOOSING_MODE);
+
         if (isChoosingMode) {
-            chosenBucketIDs = getArguments().getStringArrayList(KEY_CHOSEN_BUCKET_IDS);
-            if (chosenBucketIDs == null) {
-                chosenBucketIDs = new ArrayList<>();
+            List<String> chosenBucketIDList = args.getStringArrayList(KEY_COLLECTED_BUCKET_IDS);
+            if (chosenBucketIDList != null) {
+                collectedBucketIDSet = new HashSet<>(chosenBucketIDList);
             }
+        } else {
+            collectedBucketIDSet = new HashSet<>();
         }
+
+        // init UI
+        swipeRefreshLayout.setEnabled(false);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                AsyncTaskCompat.executeParallel(new LoadBucketsTask(true));
+            }
+        });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.addItemDecoration(new SpaceItemDecoration(
                 getResources().getDimensionPixelSize(R.dimen.spacing_medium)));
 
-        adapter = new BucketListAdapter(new ArrayList<Bucket>(), new BucketListAdapter.LoadMoreListener() {
-            @Override
-            public void onLoadMore() {
-                AsyncTaskCompat.executeParallel(
-                        new LoadBucketTask(adapter.getDataCount() / Dribbble.COUNT_PER_PAGE + 1));
-            }
-        }, isChoosingMode);
-
+        adapter = new BucketListAdapter(getContext(), new ArrayList<Bucket>(), onLoadMore, isChoosingMode);
         recyclerView.setAdapter(adapter);
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -122,6 +150,31 @@ public class BucketListFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        if (isChoosingMode) {
+            inflater.inflate(R.menu.bucket_list_choose_mode_menu, menu);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.save) {
+            ArrayList<String> chosenBucketIDs = new ArrayList<>();
+            for (Bucket bucket : adapter.getData()) {
+                if (bucket.isChoosing) {
+                    chosenBucketIDs.add(bucket.id);
+                }
+            }
+
+            Intent intent = new Intent();
+            intent.putStringArrayListExtra(KEY_CHOSEN_BUCKET_IDS, chosenBucketIDs);
+            getActivity().setResult(Activity.RESULT_OK, intent);
+            getActivity().finish();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQ_CODE_NEW_BUCKET && resultCode == Activity.RESULT_OK) {
             String bucketName = data.getStringExtra(NewBucketDialogFragment.KEY_BUCKET_NAME);
@@ -132,67 +185,58 @@ public class BucketListFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if (isChoosingMode) {
-            inflater.inflate(R.menu.bucket_list_choose_mode_menu, menu);
-        }
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.save) {
-            ArrayList<String> chosenBucketIDs = adapter.getSelectedBucketIDs();
+    private class LoadBucketsTask extends DribbbleTask<Void, Void, List<Bucket>> {
 
-            Intent intent = new Intent();
-            intent.putStringArrayListExtra(KEY_CHOSEN_BUCKET_IDS, chosenBucketIDs);
-            getActivity().setResult(Activity.RESULT_OK, intent);
-            getActivity().finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+        private boolean refresh;
 
-    private class LoadBucketTask extends AsyncTask<Void, Void, List<Bucket>> {
-
-        int page;
-
-        public LoadBucketTask(int page) {
-            this.page = page;
+        public LoadBucketsTask(boolean refresh) {
+            this.refresh = refresh;
         }
 
         @Override
-        protected List<Bucket> doInBackground(Void... voids) {
-            try {
-                return Dribbble.getUserBuckets(page);
-            } catch (IOException | JsonSyntaxException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(List<Bucket> buckets) {
-            if (buckets != null) {
-                if (isChoosingMode) {
-                    // mark each bucket whether it has been chosen
-                    for (Bucket bucket : buckets) {
-                        if (chosenBucketIDs.contains(bucket.id)) {
-                            bucket.isChoosing = true;
-                        }
-                    }
-                }
-
-                adapter.append(buckets);
-                // 如果返回的buckets个数是12， 说明可能还会有更多的，则显示加载标志。如果不足12个，则说明到底了
-                adapter.setShowLoading(buckets.size() == Dribbble.COUNT_PER_PAGE);
+        protected List<Bucket> doJob(Void... params) throws DribbbleException {
+            final int page;
+            if (refresh) {
+                page = 1;
             } else {
-                Snackbar.make(getView(), "Error!", Snackbar.LENGTH_LONG).show();
+                page = adapter.getData().size() / Dribbble.COUNT_PER_PAGE + 1;
             }
+
+            if (userID == null) {
+                return Dribbble.getUserBuckets(page);
+            } else {
+                return Dribbble.getUserBuckets(userID, page);
+            }
+        }
+
+        @Override
+        protected void onSuccess(List<Bucket> buckets) {
+            adapter.setShowLoading(buckets.size() >= Dribbble.COUNT_PER_PAGE);
+
+            for (Bucket bucket : buckets) {
+                if (collectedBucketIDSet.contains(bucket.id)) {
+                    bucket.isChoosing = true;
+                }
+            }
+
+            if (refresh) {
+                adapter.setData(buckets);
+                swipeRefreshLayout.setRefreshing(false);
+            } else {
+                adapter.append(buckets);
+            }
+
+            swipeRefreshLayout.setEnabled(true);
+        }
+
+        @Override
+        protected void onFailed(DribbbleException e) {
+            Snackbar.make(getView(), e.getMessage(), Snackbar.LENGTH_LONG).show();
         }
     }
 
-    private class NewBucketTask extends AsyncTask<Void, Void, Bucket> {
+    private class NewBucketTask extends DribbbleTask<Void, Void, Bucket> {
 
         private String name;
         private String description;
@@ -203,25 +247,19 @@ public class BucketListFragment extends Fragment {
         }
 
         @Override
-        protected Bucket doInBackground(Void... voids) {
-            try {
-                return Dribbble.newBucket(name, description);
-            } catch (IOException | JsonSyntaxException e) {
-                e.printStackTrace();
-                return null;
-            }
+        protected Bucket doJob(Void... params) throws DribbbleException {
+            return Dribbble.newBucket(name, description);
         }
 
         @Override
-        protected void onPostExecute(Bucket newBucket) {
-            if (newBucket != null) {
-                // 加到顶端
-                adapter.prepend(Collections.singletonList(newBucket));
-            } else {
-                Snackbar.make(getView(), "Error!", Snackbar.LENGTH_LONG).show();
-            }
+        protected void onSuccess(Bucket bucket) {
+            bucket.isChoosing = true;
+            adapter.prepend(Collections.singletonList(bucket));
+        }
+
+        @Override
+        protected void onFailed(DribbbleException e) {
+            Snackbar.make(getView(), e.getMessage(), Snackbar.LENGTH_LONG).show();
         }
     }
-
-
 }

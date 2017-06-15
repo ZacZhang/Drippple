@@ -20,6 +20,9 @@
     <string name="share_shot">Share this shot!</string>
     <string name="choose_bucket">Choose bucket</string>
 
+    <string name="shot_count_single">%1$d shot</string>
+    <string name="shot_count_plural">%1$d shots</string>
+
     <string name="open_drawer">open drawer</string>
     <string name="close_drawer">close drawer</string>
 

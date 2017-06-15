@@ -42,14 +42,13 @@ public class ShotFragment extends Fragment {
     public static final String KEY_SHOT = "shot";
     public static final int REQ_CODE_BUCKET = 100;
 
-    @BindView(R.id.recycler_view)
-    RecyclerView recyclerView;
+    @BindView(R.id.recycler_view) RecyclerView recyclerView;
 
     private Shot shot;
     private boolean isLiking;
     private ArrayList<String> collectedBucketIDs;
 
-    private ShotAdapter adapter;
+    // private ShotAdapter adapter;
 
 
     // 接收传进来的整个bundle，设置成setArguments, 然后return这个fragment
@@ -75,23 +74,19 @@ public class ShotFragment extends Fragment {
 
         // json解序列化
         // getArguments()得到传进来的bundle，然后取出key为shot的json字符串，解序列化为shot对象
-        shot = ModelUtils.toObject(getArguments().getString(KEY_SHOT), new TypeToken<Shot>() {
-        });
-
-        adapter = new ShotAdapter(this, shot);
+        shot = ModelUtils.toObject(getArguments().getString(KEY_SHOT), new TypeToken<Shot>() {});
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(new ShotAdapter(this, shot));
 
         isLiking = true;
-
         AsyncTaskCompat.executeParallel(new CheckLikeTask());
         AsyncTaskCompat.executeParallel(new LoadBucketsTask());
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQ_CODE_BUCKET && requestCode == Activity.RESULT_OK) {
+        if (requestCode == REQ_CODE_BUCKET && resultCode == Activity.RESULT_OK) {
             List<String> chosenBucketIDs = data.getStringArrayListExtra(BucketListFragment.KEY_CHOSEN_BUCKET_IDS);
             List<String> addedBucketIDs = new ArrayList<>();
             List<String> removedBucketIDs = new ArrayList<>();
@@ -116,8 +111,7 @@ public class ShotFragment extends Fragment {
 
     private void setResult() {
         Intent intent = new Intent();
-        intent.putExtra(KEY_SHOT, ModelUtils.toString(shot, new TypeToken<Shot>() {
-        }));
+        intent.putExtra(KEY_SHOT, ModelUtils.toString(shot, new TypeToken<Shot>() {}));
         getActivity().setResult(Activity.RESULT_OK, intent);
     }
 

@@ -13,10 +13,13 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.zaczhang.drippple.dribbble.Dribbble;
+import com.zaczhang.drippple.utils.ImageUtils;
 import com.zaczhang.drippple.view.bucket_list.BucketListFragment;
+import com.zaczhang.drippple.view.shot_detail.ShotFragment;
 import com.zaczhang.drippple.view.shot_list.ShotListFragment;
 
 import butterknife.BindView;
@@ -44,12 +47,22 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportActionBar().setHomeButtonEnabled(true);
 
-        setupDrawer();
+        DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                drawerLayout,          /* DrawerLayout object */
+                R.string.open_drawer,         /* "open drawer" description */
+                R.string.close_drawer         /* "close drawer" description */
+        );
+
+        setupDrawer(drawerLayout);
 
         if (savedInstanceState == null) {
+            ShotListFragment shotListFragment = ShotListFragment.newInstance(ShotListFragment.LIST_TYPE_POPULAR);
+
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.fragment_container, ShotListFragment.newInstance())
+                    .add(R.id.fragment_container, shotListFragment)
                     .commit();
         }
     }
@@ -71,17 +84,9 @@ public class MainActivity extends AppCompatActivity {
         return drawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
-    private void setupDrawer() {
-        drawerToggle = new ActionBarDrawerToggle(
-                this,                  /* host Activity */
-                drawerLayout,          /* DrawerLayout object */
-                R.string.open_drawer,         /* "open drawer" description */
-                R.string.close_drawer         /* "close drawer" description */
-        );
-
-        drawerLayout.addDrawerListener(drawerToggle);
-
-        View headerView = navigationView.getHeaderView(0);
+    private void setupDrawer(final DrawerLayout drawerLayout) {
+        // dynamically set header, the header is not specified in main_activity.xml layout
+        View headerView = navigationView.inflateHeaderView(R.layout.nav_header_logged_in);
 
         ((TextView) headerView.findViewById(R.id.nav_header_user_name)).setText(Dribbble.getCurrentUser().name);
 
@@ -96,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ImageView userPicture = (ImageView) headerView.findViewById(R.id.nav_header_user_picture);
+        ImageUtils.loadUserPicture(this, userPicture, Dribbble.getCurrentUser().avatar_url);
+
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -109,15 +117,15 @@ public class MainActivity extends AppCompatActivity {
 
                 switch (item.getItemId()) {
                     case R.id.drawer_item_home:
-                        fragment = ShotListFragment.newInstance();
+                        fragment = ShotListFragment.newInstance(ShotListFragment.LIST_TYPE_POPULAR);
                         setTitle(R.string.title_home);
                         break;
                     case R.id.drawer_item_likes:
-                        fragment = ShotListFragment.newInstance();
+                        fragment = ShotListFragment.newInstance(ShotListFragment.LIST_TYPE_LIKED);
                         setTitle(R.string.title_likes);
                         break;
                     case R.id.drawer_item_buckets:
-                        fragment = BucketListFragment.newInstance(false, null);
+                        fragment = BucketListFragment.newInstance(null, false, null);
                         setTitle(R.string.title_buckets);
                         break;
                 }

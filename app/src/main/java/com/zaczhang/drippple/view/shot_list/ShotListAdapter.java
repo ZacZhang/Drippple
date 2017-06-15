@@ -1,129 +1,68 @@
 package com.zaczhang.drippple.view.shot_list;
 
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.drawee.interfaces.DraweeController;
 import com.google.gson.reflect.TypeToken;
 import com.zaczhang.drippple.R;
 import com.zaczhang.drippple.model.Shot;
+import com.zaczhang.drippple.utils.ImageUtils;
 import com.zaczhang.drippple.utils.ModelUtils;
+import com.zaczhang.drippple.view.base.BaseViewHolder;
+import com.zaczhang.drippple.view.base.InfiniteAdapter;
 import com.zaczhang.drippple.view.shot_detail.ShotActivity;
 import com.zaczhang.drippple.view.shot_detail.ShotFragment;
 
-import java.net.URI;
 import java.util.List;
 
 
 
-public class ShotListAdapter extends RecyclerView.Adapter {
+public class ShotListAdapter extends InfiniteAdapter<Shot> {
 
-    private static final int VIEW_TYPE_SHOT = 0;
-    private static final int VIEW_TYPE_LOADING = 1;
+    private final ShotListFragment shotListFragment;
 
-    private List<Shot> data;
-    private LoadMoreListener loadMoreListener;
-    private boolean showLoading;
 
     // adapter接收一个callback，当需要加载更多数据的时候，调用这个callback。adapter只负责把数据显示到界面上。
-    public ShotListAdapter(@NonNull List<Shot> data, @NonNull LoadMoreListener loadMoreListener) {
-        this.data = data;
-        this.loadMoreListener = loadMoreListener;
-        this.showLoading = true;
+    public ShotListAdapter(@NonNull ShotListFragment shotListFragment,
+                           @NonNull List<Shot> data,
+                           @NonNull LoadMoreListener loadMoreListener) {
+        super(shotListFragment.getContext(), data, loadMoreListener);
+        this.shotListFragment = shotListFragment;
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == VIEW_TYPE_SHOT) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_shot, parent, false);
-            return new ShotViewHolder(view);
-        } else {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_loading, parent, false);
-            return new RecyclerView.ViewHolder(view) {};
-        }
+    protected BaseViewHolder onCreateItemViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.list_item_shot, parent, false);
+        return new ShotViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
-        final int viewType = getItemViewType(position);
+    protected void onBindItemViewHolder(BaseViewHolder holder, int position) {
+        ShotViewHolder shotViewHolder = (ShotViewHolder) holder;
 
-        if (viewType == VIEW_TYPE_LOADING) {
-            loadMoreListener.onLoadMore();
-        } else {
-            final Shot shot = data.get(position);
+        final Shot shot = getData().get(position);
 
-            ShotViewHolder shotViewHolder = (ShotViewHolder) holder;
+        // 进入具体的shot
+        // launch ShotActivity and pass the Shot data to it
+        shotViewHolder.cover.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getContext(), ShotActivity.class);
+                intent.putExtra(ShotFragment.KEY_SHOT, ModelUtils.toString(shot, new TypeToken<Shot>() {}));
+                // 单独传一个title是因为ShotActivity接收到Shot数据，原封不动的传给ShotFragment。
+                // 为了ShotActivity取到标题时，不需要解序列化，这里单独再传一个title
+                intent.putExtra(ShotActivity.KEY_SHOT_TITLE, shot.title);
+                shotListFragment.startActivityForResult(intent,ShotListFragment.REQ_CODE_SHOT);
+            }
+        });
 
-            shotViewHolder.likeCount.setText(String.valueOf(shot.likes_count));
-            shotViewHolder.bucketCount.setText(String.valueOf(shot.buckets_count));
-            shotViewHolder.viewCount.setText(String.valueOf(shot.views_count));
+        shotViewHolder.likeCount.setText(String.valueOf(shot.likes_count));
+        shotViewHolder.bucketCount.setText(String.valueOf(shot.buckets_count));
+        shotViewHolder.viewCount.setText(String.valueOf(shot.views_count));
 
-            // play gif automatically
-            DraweeController controller = Fresco.newDraweeControllerBuilder()
-                    .setUri(Uri.parse(shot.getImageUrl()))
-                    .setAutoPlayAnimations(true)
-                    .build();
-            shotViewHolder.image.setController(controller);
-
-            // launch ShotActivity and pass the Shot data to it
-            shotViewHolder.cover.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Context context = holder.itemView.getContext();
-                    Intent intent = new Intent(context, ShotActivity.class);
-                    intent.putExtra(ShotFragment.KEY_SHOT, ModelUtils.toString(shot, new TypeToken<Shot>() {}));
-                    // 单独传一个title是因为ShotActivity接收到Shot数据，原封不动的传给ShotFragment。
-                    // 为了ShotActivity取到标题时，不需要解序列化，这里单独再传一个title
-                    intent.putExtra(ShotActivity.KEY_SHOT_TITLE, shot.title);
-                    context.startActivity(intent);
-                }
-            });
-        }
-    }
-
-    @Override
-    public int getItemCount() {
-        if (showLoading) {
-            // 多一个是loading
-            return data.size() + 1;
-        } else {
-            return data.size();
-        }
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        if (position < data.size()) {
-            return VIEW_TYPE_SHOT;
-        } else {
-            return VIEW_TYPE_LOADING;
-        }
-    }
-
-    public void append(@NonNull List<Shot> moreShots) {
-        // 更新数据
-        data.addAll(moreShots);
-        // 更新界面
-        notifyDataSetChanged();
-    }
-
-    public void setShowLoading(boolean showLoading) {
-        this.showLoading = showLoading;
-        notifyDataSetChanged();
-    }
-
-    public int getDataCount() {
-        return data.size();
-    }
-
-    public interface LoadMoreListener {
-        void onLoadMore();
+        ImageUtils.loadShotImage(shot, shotViewHolder.image);
     }
 }

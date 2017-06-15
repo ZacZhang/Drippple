@@ -1,9 +1,7 @@
 package com.zaczhang.drippple.view.shot_detail;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
@@ -12,22 +10,11 @@ import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.Toast;
 
-import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.drawee.interfaces.DraweeController;
 import com.zaczhang.drippple.R;
 import com.zaczhang.drippple.model.Shot;
 import com.zaczhang.drippple.utils.ImageUtils;
-import com.zaczhang.drippple.view.bucket_list.BucketListFragment;
-import com.zaczhang.drippple.view.bucket_list.ChooseBucketActivity;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 // ShotAdapter is used to display a Shot object as items in RecyclerView
 public class ShotAdapter extends RecyclerView.Adapter {

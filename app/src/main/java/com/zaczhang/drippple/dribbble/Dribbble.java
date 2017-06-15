@@ -260,7 +260,7 @@ public class Dribbble {
     }
 
     // 返回一个shot被收藏到哪些buckets
-    public static List<Bucket> getShotBuckets(@NonNull String shotID, int page) throws DribbbleException {
+    public static List<Bucket> getUserBuckets(@NonNull String shotID, int page) throws DribbbleException {
         String url = SHOTS_END_POINT + "/" + shotID + "/buckets?per_page=" + page;
         return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
     }
