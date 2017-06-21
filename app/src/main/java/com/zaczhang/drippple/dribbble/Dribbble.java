@@ -248,19 +248,26 @@ public class Dribbble {
         return parseResponse(makeGetRequest(url), SHOT_LIST_TYPE);
     }
 
-    // 返回一个user的所有buckets
+    // 返回一个user的所有buckets(已经授权，有自己的access token的情况下)
     public static List<Bucket> getUserBuckets() throws DribbbleException {
         String url = USER_END_POINT + "/" + "buckets?per_page=" + Integer.MAX_VALUE;
         return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
     }
 
+    // 返回一个user的所有buckets(已经授权，有自己的access token的情况下)
     public static List<Bucket> getUserBuckets(int page) throws DribbbleException {
         String url = USER_END_POINT + "/" + "buckets?page=" + page;
         return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
     }
 
+    // 返回一个user的所有buckets(没有授权，没有特定的access token，则需要指定用户)
+    public static List<Bucket> getUserBuckets(@NonNull String userID, int page) throws DribbbleException {
+        String url = USERS_END_POINT + "/:" + userID + "/buckets?page=" + page;
+        return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
+    }
+
     // 返回一个shot被收藏到哪些buckets
-    public static List<Bucket> getUserBuckets(@NonNull String shotID, int page) throws DribbbleException {
+    public static List<Bucket> getShotBuckets(@NonNull String shotID, int page) throws DribbbleException {
         String url = SHOTS_END_POINT + "/" + shotID + "/buckets?per_page=" + page;
         return parseResponse(makeGetRequest(url), BUCKET_LIST_TYPE);
     }

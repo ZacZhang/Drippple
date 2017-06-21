@@ -10,8 +10,10 @@ public abstract class DribbbleTask<Params, Progress, Result>
 
     private DribbbleException exception;
 
+    // 非UI线程
     protected abstract Result doJob(Params... params) throws DribbbleException;
 
+    // UI线程
     protected abstract void onSuccess(Result result);
 
     protected abstract void onFailed(DribbbleException e);

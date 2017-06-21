@@ -74,6 +74,7 @@ public abstract class InfiniteAdapter<M> extends RecyclerView.Adapter<BaseViewHo
         }
     }
 
+    // 加到最后
     public void append(@NonNull List<M> data) {
         // 更新数据
         this.data.addAll(data);
@@ -81,6 +82,7 @@ public abstract class InfiniteAdapter<M> extends RecyclerView.Adapter<BaseViewHo
         notifyDataSetChanged();
     }
 
+    // 加到最前
     public void prepend(@NonNull List<M> data) {
         this.data.addAll(0, data);
         notifyDataSetChanged();

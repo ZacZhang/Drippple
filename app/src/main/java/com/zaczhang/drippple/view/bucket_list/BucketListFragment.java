@@ -139,10 +139,13 @@ public class BucketListFragment extends Fragment {
         adapter = new BucketListAdapter(getContext(), new ArrayList<Bucket>(), onLoadMore, isChoosingMode);
         recyclerView.setAdapter(adapter);
 
+        // 点击之后弹出添加新bucket的对话框
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 NewBucketDialogFragment dialogFragment = NewBucketDialogFragment.newInstance();
+
+                // 把 TargetFragment 设置成主调fragment (即BucketListFragment)
                 dialogFragment.setTargetFragment(BucketListFragment.this, REQ_CODE_NEW_BUCKET);
                 dialogFragment.show(getFragmentManager(), NewBucketDialogFragment.TAG);
             }
@@ -158,6 +161,7 @@ public class BucketListFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // 当save被点击时
         if (item.getItemId() == R.id.save) {
             ArrayList<String> chosenBucketIDs = new ArrayList<>();
             for (Bucket bucket : adapter.getData()) {
@@ -174,11 +178,14 @@ public class BucketListFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+
+    // 获取新建Bucket之后传回来的数据
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQ_CODE_NEW_BUCKET && resultCode == Activity.RESULT_OK) {
             String bucketName = data.getStringExtra(NewBucketDialogFragment.KEY_BUCKET_NAME);
             String bucketDescription = data.getStringExtra(NewBucketDialogFragment.KEY_BUCKET_DESCRIPTION);
+            // 如果是空的name，就什么都不做。否则就启动新的AsyncTask发送网络请求来完成新建bucket的工作
             if (!TextUtils.isEmpty(bucketName)) {
                 AsyncTaskCompat.executeParallel(new NewBucketTask(bucketName, bucketDescription));
             }
@@ -186,6 +193,7 @@ public class BucketListFragment extends Fragment {
     }
 
 
+    // 加载已有的buckets
     private class LoadBucketsTask extends DribbbleTask<Void, Void, List<Bucket>> {
 
         private boolean refresh;
@@ -204,14 +212,18 @@ public class BucketListFragment extends Fragment {
             }
 
             if (userID == null) {
+                // 如果没有userID，则直接用access token的形式获得用户的收藏夹
                 return Dribbble.getUserBuckets(page);
             } else {
+                // 如果有userID，则用userID的形式获得用户的收藏夹
                 return Dribbble.getUserBuckets(userID, page);
             }
         }
 
         @Override
         protected void onSuccess(List<Bucket> buckets) {
+            // 如果buckets的个数大于等于12个，说明可能还会有更多的，故显示loading animation。
+            // 其实这里应该用 ==，因为dribbble不会返回超过12个
             adapter.setShowLoading(buckets.size() >= Dribbble.COUNT_PER_PAGE);
 
             for (Bucket bucket : buckets) {
@@ -236,6 +248,7 @@ public class BucketListFragment extends Fragment {
         }
     }
 
+    // 新建bucket(网络请求)
     private class NewBucketTask extends DribbbleTask<Void, Void, Bucket> {
 
         private String name;
@@ -253,7 +266,9 @@ public class BucketListFragment extends Fragment {
 
         @Override
         protected void onSuccess(Bucket bucket) {
+            // 新建的bucket默认是选中的
             bucket.isChoosing = true;
+            // 更新bucket列表，prepend是把新建的bucket加到最前面
             adapter.prepend(Collections.singletonList(bucket));
         }
 

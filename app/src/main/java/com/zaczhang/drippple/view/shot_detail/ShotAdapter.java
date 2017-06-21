@@ -146,6 +146,7 @@ public class ShotAdapter extends RecyclerView.Adapter {
                     bucketDrawable = ContextCompat.getDrawable(infoViewHolder.itemView.getContext(),
                             R.drawable.ic_move_to_inbox_black_18dp);
                 }
+
                 infoViewHolder.bucketButton.setImageDrawable(bucketDrawable);
 
                 break;

@@ -28,6 +28,7 @@ public class NewBucketDialogFragment extends DialogFragment {
 
     public static final String TAG = "NewBucketDialogFragment";
 
+    // 返回new出来的 NewBucketDialogFragment
     public static NewBucketDialogFragment newInstance() {
         return new NewBucketDialogFragment();
     }

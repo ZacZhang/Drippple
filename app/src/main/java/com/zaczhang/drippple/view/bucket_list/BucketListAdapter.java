@@ -47,8 +47,9 @@ public class BucketListAdapter extends InfiniteAdapter<Bucket> {
         bucketViewHolder.bucketName.setText(bucket.name);
         bucketViewHolder.bucketCount.setText(formatShotCount(bucket.shots_count));
 
+        // 如果在选择模式
         if (isChoosingMode) {
-            // 选择存放在哪个bucket
+            // CheckBox显示为可见
             bucketViewHolder.bucketChosen.setVisibility(View.VISIBLE);
 
             if (bucket.isChoosing) {
@@ -59,15 +60,18 @@ public class BucketListAdapter extends InfiniteAdapter<Bucket> {
                         .getDrawable(getContext(), R.drawable.ic_check_box_outline_blank_black_24dp));
             }
 
+            // 当item被点击时
             bucketViewHolder.bucketLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     bucket.isChoosing = !bucket.isChoosing;
+                    // 只刷新第position个位置的item
                     notifyItemChanged(position);
                 }
             });
         } else {
             // 查看buckets
+            // 把CheckBox藏起来
             bucketViewHolder.bucketChosen.setVisibility(View.GONE);
 
             // if not in choosing mode, we need to open a new Activity to show

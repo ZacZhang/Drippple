@@ -48,9 +48,6 @@ public class ShotFragment extends Fragment {
     private boolean isLiking;
     private ArrayList<String> collectedBucketIDs;
 
-    // private ShotAdapter adapter;
-
-
     // 接收传进来的整个bundle，设置成setArguments, 然后return这个fragment
     // 通过这种方式完成ShotActivity到ShotFragment的数据传递
     public static ShotFragment newInstance(@NonNull Bundle args) {
@@ -122,12 +119,14 @@ public class ShotFragment extends Fragment {
         }
     }
 
+    // 点击bucket，启动新的activity，并传入数据
     public void bucket() {
         if (collectedBucketIDs == null) {
             Snackbar.make(getView(), R.string.shot_detail_loading_buckets, Snackbar.LENGTH_LONG).show();
         } else {
             Intent intent = new Intent(getContext(), BucketListActivity.class);
             intent.putExtra(BucketListFragment.KEY_CHOOSING_MODE, true);
+            // 把已经加入过的buckets传进去
             intent.putStringArrayListExtra(BucketListFragment.KEY_COLLECTED_BUCKET_IDS, collectedBucketIDs);
             startActivityForResult(intent, REQ_CODE_BUCKET);
         }
@@ -210,10 +209,16 @@ public class ShotFragment extends Fragment {
 
         @Override
         protected List<String> doJob(Void... params) throws DribbbleException {
+            // shot被哪些buckets收藏了
             List<Bucket> shotBuckets = Dribbble.getShotBuckets(shot.id);
+
+            // 用户自己有哪些收藏夹
             List<Bucket> userBuckets = Dribbble.getUserBuckets();
 
+            // 取交集就是当前shot被放入了当前用户的哪些收藏夹
             Set<String> userBucketIDs = new HashSet<>();
+
+            // 先把userBuckets放到HashSet中
             for (Bucket userBucket : userBuckets) {
                 userBucketIDs.add(userBucket.id);
             }
@@ -231,6 +236,7 @@ public class ShotFragment extends Fragment {
         protected void onSuccess(List<String> result) {
             collectedBucketIDs = new ArrayList<>(result);
 
+            // 大于0表示至少被一个bucket收藏了
             if (result.size() > 0) {
                 shot.bucketed = true;
                 recyclerView.getAdapter().notifyDataSetChanged();
