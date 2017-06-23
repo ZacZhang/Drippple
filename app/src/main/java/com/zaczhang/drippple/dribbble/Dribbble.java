@@ -207,7 +207,7 @@ public class Dribbble {
 
     // 检查是否已经like
     public static boolean isLikingShot(@NonNull String id) throws DribbbleException {
-        String url = SHOTS_END_POINT + "/" + id + "/likes";
+        String url = SHOTS_END_POINT + "/" + id + "/like";
         Response response = makeGetRequest(url);
         switch (response.code()) {
             case HttpURLConnection.HTTP_OK:

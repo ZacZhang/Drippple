@@ -69,22 +69,6 @@ public class AuthActivity extends AppCompatActivity {
                 return super.shouldOverrideUrlLoading(view, request);
             }
 
-
-//            @Override
-//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-//
-//                // 当整个url以redirect_uri开头时，获取后部分的临时令牌(code)
-//                if (url.startsWith(Auth.REDIRECT_URI)) {
-//                    Uri uri = Uri.parse(url);
-//                    Intent intent = new Intent();
-//                    intent.putExtra(KEY_CODE, uri.getQueryParameter(KEY_CODE));
-//                    setResult(RESULT_OK, intent);
-//                    finish();
-//                }
-//
-//                return super.shouldOverrideUrlLoading(view, url);
-//            }
-
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 progressBar.setVisibility(View.VISIBLE);

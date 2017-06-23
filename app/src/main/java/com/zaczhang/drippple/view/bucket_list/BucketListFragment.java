@@ -54,7 +54,7 @@ public class BucketListFragment extends Fragment {
     public static final int REQ_CODE_NEW_BUCKET = 100;
 
     public static final String KEY_USER_ID = "user_id";
-    public static final String KEY_CHOOSING_MODE = "choose_mode";
+    public static final String KEY_CHOOSING_MODE = "choosing_mode";
     public static final String KEY_CHOSEN_BUCKET_IDS = "chosen_bucket_ids";
     public static final String KEY_COLLECTED_BUCKET_IDS = "collected_bucket_ids";
 
@@ -193,6 +193,7 @@ public class BucketListFragment extends Fragment {
     }
 
 
+
     // 加载已有的buckets
     private class LoadBucketsTask extends DribbbleTask<Void, Void, List<Bucket>> {
 
@@ -227,7 +228,8 @@ public class BucketListFragment extends Fragment {
             adapter.setShowLoading(buckets.size() >= Dribbble.COUNT_PER_PAGE);
 
             for (Bucket bucket : buckets) {
-                if (collectedBucketIDSet.contains(bucket.id)) {
+                // 如果已选择的buckets中包含当前bucket，则将isChoosing更新为true(将CheckBox勾上)
+                if (collectedBucketIDSet != null && collectedBucketIDSet.contains(bucket.id)) {
                     bucket.isChoosing = true;
                 }
             }
@@ -236,6 +238,7 @@ public class BucketListFragment extends Fragment {
                 adapter.setData(buckets);
                 swipeRefreshLayout.setRefreshing(false);
             } else {
+                // 将更新为true的bucket添加到界面上
                 adapter.append(buckets);
             }
 

@@ -49,7 +49,7 @@ public class BucketListAdapter extends InfiniteAdapter<Bucket> {
 
         // 如果在选择模式
         if (isChoosingMode) {
-            // CheckBox显示为可见
+            // CheckBox显示为可见(bucketChosen是CheckBox对应的坑)
             bucketViewHolder.bucketChosen.setVisibility(View.VISIBLE);
 
             if (bucket.isChoosing) {

@@ -88,15 +88,18 @@ public class ShotFragment extends Fragment {
             List<String> addedBucketIDs = new ArrayList<>();
             List<String> removedBucketIDs = new ArrayList<>();
 
-            // 拿到界面上被选中的bucket id, 然后和之前的bucket id对比，多出来就加上
+            // 拿到界面上被选中的bucket id, 然后和刚进入的的bucket id对比，多出来就加上
+            // chosenBucketIDs是选择结束后的，collectedBucketIDs是刚进去时的bucketIDs
             for (String chosenBucketID : chosenBucketIDs) {
+                // 刚进界面时没有的就是多出来的
                 if (!collectedBucketIDs.contains(chosenBucketID)) {
                     addedBucketIDs.add(chosenBucketID);
                 }
             }
 
-            // 拿到界面上被选中的bucket id, 然后和之前的bucket id对比，少了就减去
+            // 拿到界面上被选中的bucket id, 然后和刚进入的bucket id对比，少了就减去
             for (String collectedBucketID : collectedBucketIDs) {
+                // 选中之后没有的就是被删掉的
                 if (!chosenBucketIDs.contains(collectedBucketID)) {
                     removedBucketIDs.add(collectedBucketID);
                 }
@@ -139,6 +142,8 @@ public class ShotFragment extends Fragment {
         shareIntent.setType("text/plain");
         startActivity(Intent.createChooser(shareIntent, getString(R.string.share_shot)));
     }
+
+
 
     private class LikeTask extends DribbbleTask<Void, Void, Void> {
 
@@ -183,9 +188,11 @@ public class ShotFragment extends Fragment {
         }
     }
 
+
+
     private class CheckLikeTask extends DribbbleTask<Void, Void, Boolean> {
 
-        // 检查是否喜欢当前shot
+        // 检查是否喜欢当前shot，如果like，点亮爱心
         @Override
         protected Boolean doJob(Void... params) throws DribbbleException {
             return Dribbble.isLikingShot(shot.id);
@@ -205,11 +212,13 @@ public class ShotFragment extends Fragment {
         }
     }
 
+
+
     private class LoadBucketsTask extends DribbbleTask<Void, Void, List<String>> {
 
         @Override
         protected List<String> doJob(Void... params) throws DribbbleException {
-            // shot被哪些buckets收藏了
+            // 当前shot被哪些buckets收藏了
             List<Bucket> shotBuckets = Dribbble.getShotBuckets(shot.id);
 
             // 用户自己有哪些收藏夹
@@ -223,6 +232,7 @@ public class ShotFragment extends Fragment {
                 userBucketIDs.add(userBucket.id);
             }
 
+            // 刚进入时被哪些buckets收藏了
             List<String> collectedBucketIDs = new ArrayList<>();
             for (Bucket shotBucket : shotBuckets) {
                 if (userBucketIDs.contains(shotBucket.id)) {
@@ -249,6 +259,8 @@ public class ShotFragment extends Fragment {
         }
     }
 
+
+
     private class UpdateBucketTask extends DribbbleTask<Void, Void, Void> {
 
         private List<String> added;
@@ -262,10 +274,12 @@ public class ShotFragment extends Fragment {
         @Override
         protected Void doJob(Void... params) throws DribbbleException {
             for (String addedID : added) {
+                // 把shot.id添加到addedID收藏夹
                 Dribbble.addBucketShot(addedID, shot.id);
             }
 
             for (String removedID : removed) {
+                // 把shot.id从removeID收藏夹移除
                 Dribbble.removeBucketShot(removedID, shot.id);
             }
             return null;

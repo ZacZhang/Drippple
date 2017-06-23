@@ -16,6 +16,8 @@ public class BucketListActivity extends SingleFragmentActivity {
 
         boolean isChoosingMode = getIntent().getExtras().getBoolean(BucketListFragment.KEY_CHOOSING_MODE);
 
+        // 通过Activity把数据传给BucketListFragment
+        // 获得原本已经被选择的buckets，并将其传给ShotListFragment
         ArrayList<String> chosenBucketIDs = getIntent().getExtras().getStringArrayList(
                 BucketListFragment.KEY_CHOSEN_BUCKET_IDS);
 
